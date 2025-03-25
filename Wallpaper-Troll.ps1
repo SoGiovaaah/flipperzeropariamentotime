@@ -43,7 +43,6 @@ Add-Type -MemberDefinition @"
 "@ -Name "InputBlocker" -Namespace "Win32"
 
 Add-Type -AssemblyName System.Windows.Forms
-
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -57,12 +56,9 @@ $imageUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentot
 $audioUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.wav"
 $imagePath = "$env:TEMP\sfondo.png"
 $audioPath = "$env:TEMP\e.wav"
-
 $job1 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath }
 $job2 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:audioUrl -OutFile $using:audioPath }
-
 @($job1, $job2) | ForEach-Object { Wait-Job -Job $_; Receive-Job -Job $_; Remove-Job -Job $_ }
-
 Set-WallPaper -Image $imagePath -Style Fill
 
 [Win32.InputBlocker]::BlockInput($true) | Out-Null
@@ -76,14 +72,6 @@ $audioJob = Start-Job -ScriptBlock {
     $player.SoundLocation = $using:audioPath
     $player.PlaySync()
 }
-
-while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
-    [User32]::SetCursorPos($centerX, $centerY) | Out-Null
-    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
-    Start-Sleep -Milliseconds 5000
-}
-
-Wait-Job -Job $audioJob
 Remove-Job -Job $audioJob
 
 [Win32.InputBlocker]::BlockInput($false) | Out-Null
