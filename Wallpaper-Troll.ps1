@@ -66,15 +66,22 @@ Set-WallPaper -Image $imagePath -Style Fill
 $workingArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $centerX = [int]($workingArea.X + ($workingArea.Width / 2))
 $centerY = [int]($workingArea.Y + ($workingArea.Height / 2))
+
 $audioJob = Start-Job -ScriptBlock {
     $player = New-Object System.Media.SoundPlayer
     $player.SoundLocation = $using:audioPath
     $player.PlaySync()
 }
-while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
+
+# Limita l'invio dei tasti ESC per evitare crash
+$escSendCount = 5
+$escDelay = 1000  # Millisecondi tra ogni invio
+
+while ((Get-Job -Id $audioJob.Id).State -eq 'Running' -and $escSendCount -gt 0) {
     [User32]::SetCursorPos($centerX, $centerY) | Out-Null
     [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
-    Start-Sleep -Milliseconds 5000
+    Start-Sleep -Milliseconds $escDelay
+    $escSendCount--
 }
 Remove-Job -Job $audioJob
 
