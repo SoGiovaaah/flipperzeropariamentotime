@@ -21,7 +21,7 @@ $loopJob = Start-Job -ScriptBlock {
     while ($true) {
         [User32]::SetCursorPos($using:centerX, $using:centerY) | Out-Null
         [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
-        Start-Sleep -Milliseconds 0
+        Start-Sleep -Milliseconds 5
     }
 }
 
@@ -30,32 +30,31 @@ $audioUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentot
 $imagePath = "$env:TEMP\sfondo.png"
 $audioPath = "$env:TEMP\e.wav"
 
-$job1 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath }
-$job2 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:audioUrl -OutFile $using:audioPath }
-
-@($job1, $job2) | ForEach-Object { Wait-Job -Job $_; Receive-Job -Job $_; Remove-Job -Job $_ }
+$downloadJobs = @(
+    Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath -UseBasicParsing },
+    Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:audioUrl -OutFile $using:audioPath -UseBasicParsing }
+)
+Wait-Job -Job $downloadJobs
+$downloadJobs | Remove-Job
 
 Function Set-WallPaper {
-    param (
-        [parameter(Mandatory=$True)]
-        [string]$Image,
-        [parameter(Mandatory=$False)]
-        [ValidateSet('Fill', 'Fit', 'Stretch', 'Tile', 'Center', 'Span')]
-        [string]$Style
+    param(
+        [Parameter(Mandatory=$true)][string]$Image,
+        [Parameter()][ValidateSet('Fill', 'Fit', 'Stretch', 'Tile', 'Center', 'Span')][string]$Style
     )
-    $WallpaperStyle = Switch ($Style) {
-        "Fill" {"10"}
-        "Fit" {"6"}
-        "Stretch" {"2"}
-        "Tile" {"0"}
-        "Center" {"0"}
-        "Span" {"22"}
+    $WallpaperStyle = switch ($Style) {
+        "Fill"    { "10" }
+        "Fit"     { "6"  }
+        "Stretch" { "2"  }
+        "Tile"    { "0"  }
+        "Center"  { "0"  }
+        "Span"    { "22" }
     }
-    If($Style -eq "Tile") {
+    if ($Style -eq "Tile") {
         New-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name WallpaperStyle -PropertyType String -Value $WallpaperStyle -Force
         New-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name TileWallpaper -PropertyType String -Value 1 -Force
     }
-    Else {
+    else {
         New-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name WallpaperStyle -PropertyType String -Value $WallpaperStyle -Force
         New-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name TileWallpaper -PropertyType String -Value 0 -Force
     }
@@ -68,9 +67,7 @@ Function Set-WallPaper {
     }
 "@
     $SPI_SETDESKWALLPAPER = 0x0014
-    $UpdateIniFile = 0x01
-    $SendChangeEvent = 0x02
-    $fWinIni = $UpdateIniFile -bor $SendChangeEvent
+    $fWinIni = 0x01 -bor 0x02
     [Params]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $Image, $fWinIni) | Out-Null
 }
 
@@ -78,15 +75,9 @@ Set-WallPaper -Image $imagePath -Style Fill
 
 [Win32.InputBlocker]::BlockInput($true) | Out-Null
 
-$audioJob = Start-Job -ScriptBlock {
-    $player = New-Object System.Media.SoundPlayer
-    $player.SoundLocation = $using:audioPath
-    $player.PlaySync()
-}
-
-$audioJob | Wait-Job
-
-Remove-Job -Job $audioJob
+$player = New-Object System.Media.SoundPlayer
+$player.SoundLocation = $audioPath
+$player.PlaySync()
 
 $loopJob | Stop-Job
 $loopJob | Remove-Job
