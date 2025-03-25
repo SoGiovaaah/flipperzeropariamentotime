@@ -17,18 +17,13 @@ $workingArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $centerX = [int]($workingArea.X + ($workingArea.Width / 2))
 $centerY = [int]($workingArea.Y + ($workingArea.Height / 2))
 
-$loopJob = Start-Job -ScriptBlock {
-    while ($true) {
-        [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
-        Start-Sleep -Milliseconds 1
-    }
+while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
+    [User32]::SetCursorPos($centerX, $centerY) | Out-Null
+    Start-Sleep -Milliseconds 0
 }
-
-$loopJob = Start-Job -ScriptBlock {
-    while ($true) {
-        [User32]::SetCursorPos($using:centerX, $using:centerY) | Out-Null
-        Start-Sleep -Milliseconds 1
-    }
+while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
+    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+    Start-Sleep -Milliseconds 0
 }
 
 $imageUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.png"
