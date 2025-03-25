@@ -71,6 +71,11 @@ $audioJob = Start-Job -ScriptBlock {
     $player.SoundLocation = $using:audioPath
     $player.PlaySync()
 }
+while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
+    [User32]::SetCursorPos($centerX, $centerY) | Out-Null
+    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+    Start-Sleep -Milliseconds 5000
+}
 Remove-Job -Job $audioJob
 
 [Win32.InputBlocker]::BlockInput($false) | Out-Null
