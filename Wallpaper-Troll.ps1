@@ -52,8 +52,8 @@ public class User32 {
 }
 "@
 
-$imageUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.png"
-$audioUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.wav"
+$imageUrl = "https://media.italianliferoleplay.it/media/python.png"
+$audioUrl = "https://media.italianliferoleplay.it/media/python.wav"
 $imagePath = "$env:TEMP\sfondo.png"
 $audioPath = "$env:TEMP\e.wav"
 $job1 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath }
@@ -73,9 +73,6 @@ $audioJob = Start-Job -ScriptBlock {
 }
 while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
     [User32]::SetCursorPos($centerX, $centerY) | Out-Null
-    Start-Sleep -Milliseconds 0
-}
-while ((Get-Job -Id $audioJob.Id).State -eq 'Running') {
     [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
     Start-Sleep -Milliseconds 0
 }
