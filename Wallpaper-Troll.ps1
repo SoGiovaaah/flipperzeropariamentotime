@@ -52,8 +52,8 @@ public class User32 {
 }
 "@
 
-$imageUrl = "https://media.italianliferoleplay.it/media/python.png"
-$audioUrl = "https://media.italianliferoleplay.it/media/python.wav"
+$imageUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.png"
+$audioUrl = "https://raw.githubusercontent.com/SoGiovaaah/flipperzeropariamentotime/refs/heads/main/python.wav"
 $imagePath = "$env:TEMP\sfondo.png"
 $audioPath = "$env:TEMP\e.wav"
 $job1 = Start-Job -ScriptBlock { Invoke-WebRequest -Uri $using:imageUrl -OutFile $using:imagePath }
