@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "mysql"
+  url      = env("mysql_connection_string")
+}
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  created  DateTime @default(now())
+  stats    Stat?
+  sessions Session[]
+  friends  Friend[] @relation("UserFriends")
+  friendOf Friend[] @relation("FriendOf")
+  games    Game[]
+}
+model Friend {
+  id        Int  @id @default(autoincrement())
+  user      User @relation("UserFriends", fields: [userId], references: [id])
+  userId    Int
+  friend    User @relation("FriendOf", fields: [friendId], references: [id])
+  friendId  Int
+}
+model Game {
+  id       Int      @id @default(autoincrement())
+  type     String
+  wpm      Int
+  created  DateTime @default(now())
+  user     User?    @relation(fields: [userId], references: [id])
+  userId   Int?
+}
+model Stat {
+  id        Int    @id @default(autoincrement())
+  totalTime Int    @default(0)
+  onlineTime Int   @default(0)
+  avgWpm    Int    @default(0)
+  user      User   @relation(fields: [userId], references: [id])
+  userId    Int    @unique
+}
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  created   DateTime @default(now())
+}
+model Match {
+  id       Int      @id @default(autoincrement())
+  type     String
+  created  DateTime @default(now())
+  players  Int
+}

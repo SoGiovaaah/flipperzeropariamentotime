@@ -1,0 +1,13 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix web run dev\"",
+    "build": "npm --prefix web run build",
+    "start": "node server/index.js",
+    "migrate": "npx prisma migrate dev --name init && npx prisma generate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
